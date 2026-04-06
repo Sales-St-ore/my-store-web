@@ -267,7 +267,7 @@
         function toggleStock() { const p = db.prods.find(x => x.id == curId); rdb.ref('storeData/prods/' + curId + '/s').set(!p.s); show(curId); }
         function addCat() { db.cats.push({n: document.getElementById('newCat').value}); cloudSave(); }
         
-        function askAdmin() { let p = prompt("كلمة سر المعلم:"); if(p === "8545955") { db.isAd = !db.isAd; render(); alert(db.isAd ? "أهلاً يا مدير" : "تم الخروج"); } }
+        function askAdmin() { let p = prompt("كلمة سر المعلم:"); if(p === "85459501203") { db.isAd = !db.isAd; render(); alert(db.isAd ? "أهلاً يا مدير" : "تم الخروج"); } }
         function openAdmin() { if(db.isAd) document.getElementById('adminPanel').style.display = 'block'; else alert("أدخل الرمز أولاً"); }
         function openCart() { document.getElementById('cartPanel').style.display = 'block'; drawCart(); }
         function closeAll() { document.querySelectorAll('.panel').forEach(p => p.style.display = 'none'); }
