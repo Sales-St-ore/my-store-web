@@ -4,6 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kafr Shams | Cloud Master</title>
+    
+    <script>
+        function killSplash() {
+            const s = document.getElementById('splash');
+            if(s) {
+                s.style.opacity = '0';
+                setTimeout(() => { s.style.display = 'none'; }, 1000);
+            }
+        }
+        setTimeout(killSplash, 3000); // 3 ثوانٍ كحد أقصى وتختفي الشاشة
+    </script>
+
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     
@@ -14,59 +26,48 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: var(--white); color: var(--black); padding-bottom: 90px; overflow-x: hidden; }
         
-        /* تصميم شاشة البداية الاحترافية */
         #splash {
-            position: fixed;
-            inset: 0;
-            background: #000000;
-            z-index: 10000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
+            position: fixed; inset: 0; background: #000000; z-index: 10000;
+            display: flex; align-items: center; justify-content: center; flex-direction: column;
             transition: opacity 1s ease-in-out;
         }
-        #splash-logo {
-            width: 220px;
-            height: auto;
-            opacity: 0;
-            transform: translateY(30px);
-            transition: all 1.5s ease-out;
-        }
-        .splash-text {
-            color: var(--gold);
-            margin-top: 20px;
-            font-weight: 900;
-            font-size: 20px;
-            letter-spacing: 3px;
-            opacity: 0;
-            transition: opacity 1s ease-in 0.8s;
-        }
+        #splash-logo { width: 220px; height: auto; opacity: 0; transform: translateY(30px); transition: all 1.5s ease-out; }
+        .splash-text { color: var(--gold); margin-top: 20px; font-weight: 900; font-size: 20px; letter-spacing: 3px; opacity: 0; transition: opacity 1s ease-in 0.8s; }
+
+        #zoomOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 3000; align-items: center; justify-content: center; }
+        #zoomOverlay img { max-width: 95%; max-height: 85%; border-radius: 10px; box-shadow: 0 0 20px rgba(255,255,255,0.2); }
 
         header { position: sticky; top: 0; background: #fff; z-index: 1000; padding: 15px; border-bottom: 1px solid #f0f0f0; }
         .header-container { display: flex; flex-direction: column; align-items: center; gap: 10px; position: relative; }
         .logo-text { font-weight: 900; font-size: 26px; background: linear-gradient(to right, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 2px; }
         .admin-trigger { position: absolute; left: 0; top: 0; color: var(--black); font-size: 20px; cursor: pointer; background: #eee; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 2px solid var(--gold); box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        
         .slider-container { width: 95%; height: 180px; margin: 10px auto; border-radius: 20px; overflow: hidden; position: relative; background: #eee; }
         .slider-wrapper { display: flex; transition: transform 0.6s ease-in-out; height: 100%; }
         .slide { min-width: 100%; height: 100%; }
         .slide img { width: 100%; height: 100%; object-fit: cover; }
+        
         .cats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); gap: 12px; padding: 15px; overflow-x: auto; }
         .cat-box { text-align: center; cursor: pointer; min-width: 80px; }
         .cat-icon { width: 60px; height: 60px; background: var(--gray); border-radius: 20px; margin: 0 auto 5px; display: flex; align-items: center; justify-content: center; border: 1px solid #eee; transition: 0.3s; }
         .cat-box.active .cat-icon { background: var(--black); color: white; border-color: var(--gold); transform: scale(1.1); }
+        
         .products-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 10px; }
-        .p-card { background: #fff; border-radius: 18px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border: 1px solid #f0f0f0; position: relative; transition: 0.2s; }
+        .p-card { background: #fff; border-radius: 18px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border: 1px solid #f0f0f0; position: relative; }
         .p-card img { width: 100%; height: 210px; object-fit: cover; }
+        
         .panel { display: none; position: fixed; inset: 0; background: #fff; z-index: 2000; padding: 20px; overflow-y: auto; }
-        .btn { width: 100%; padding: 15px; border-radius: 12px; border: none; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
+        .btn { width: 100%; padding: 15px; border-radius: 12px; border: none; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-black { background: var(--black); color: white; }
-        .cart-item { display: flex; align-items: center; gap: 15px; background: #f9f9f9; padding: 12px; border-radius: 15px; margin-bottom: 10px; border: 1px solid #eee; }
-        .cart-item img { width: 65px; height: 65px; border-radius: 12px; object-fit: cover; }
+        
+        .cart-item { display: flex; align-items: center; gap: 15px; background: #f9f9f9; padding: 12px; border-radius: 15px; margin-bottom: 10px; }
         .nav-bar { position: fixed; bottom: 0; width: 100%; background: #fff; display: flex; justify-content: space-around; padding: 15px; border-top: 1px solid #eee; z-index: 1000; }
         .nav-item { color: #ccc; font-size: 24px; cursor: pointer; position: relative; }
         .nav-item.active { color: var(--black); }
-        .badge { position: absolute; top: -8px; right: -12px; background: red; color: white; font-size: 10px; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; }
+        .badge { position: absolute; top: -8px; right: -12px; background: red; color: white; font-size: 10px; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        
+        .stock-tag { font-size: 12px; padding: 4px 10px; border-radius: 6px; font-weight: bold; display: inline-block; margin-bottom: 5px; }
+        #visitorCount { text-align: center; color: #888; font-size: 12px; padding: 10px; display: none; }
     </style>
 </head>
 <body>
@@ -91,13 +92,16 @@
     <div class="slider-container"><div class="slider-wrapper" id="slider"></div></div>
     <div style="overflow-x: auto;"><div class="cats-grid" id="cats"></div></div>
     <div class="products-grid" id="products"></div>
+    <div id="visitorCount"></div>
+
+    <div id="zoomOverlay" onclick="this.style.display='none'"><img id="zoomImg"></div>
 
     <div id="detailsPanel" class="panel">
         <i class="fa-solid fa-arrow-right" style="font-size:24px;" onclick="closeAll()"></i>
-        <img id="detImg" style="width:100%; border-radius:20px; margin:20px 0;">
+        <img id="detImg" style="width:100%; border-radius:20px; margin:20px 0; cursor: zoom-in;" onclick="openZoom(this.src)">
+        <div id="pStockStatus"></div>
         <h2 id="detTitle" style="font-weight:900;"></h2>
         <div id="detPrice" style="color:var(--danger); font-size:28px; font-weight:900; margin:10px 0;"></div>
-        <div style="margin-bottom:10px;"><b>المقاسات:</b></div>
         <div id="sizes" style="display:flex; gap:10px; margin-bottom:20px; overflow-x: auto;"></div>
         <button class="btn btn-black" onclick="addToCart()">🛒 إضافة للسلة</button>
         <div id="adminTools" style="display:none; margin-top:25px; border:2px dashed var(--gold); padding:15px; border-radius:15px;">
@@ -137,8 +141,8 @@
         <div id="cartItems"></div>
         <div style="margin-top:20px; border-top:2px solid #eee; padding-top:20px;">
             <h3 id="total" style="color:red; margin-bottom:15px;"></h3>
-            <input type="text" id="name" placeholder="اسمك" style="width:100%; padding:12px; margin:5px 0;">
-            <input type="text" id="addr" placeholder="العنوان" style="width:100%; padding:12px; margin:5px 0;">
+            <input type="text" id="custName" placeholder="اسم المستلم الكامل" style="width:100%; padding:12px; margin:5px 0; border: 1px solid #ddd; border-radius: 8px;">
+            <input type="text" id="custAddr" placeholder="عنوان التوصيل بالتفصيل" style="width:100%; padding:12px; margin:5px 0; border: 1px solid #ddd; border-radius: 8px;">
             <button class="btn" style="background:#25d366; color:white;" onclick="sendWA()">✅ طلب عبر واتساب</button>
         </div>
     </div>
@@ -150,27 +154,12 @@
     </nav>
 
     <script>
-        // محرك شاشة البداية والصوت
+        // تفعيل الأنيميشن لشاشة البداية
         window.addEventListener('load', () => {
-            const splash = document.getElementById('splash');
-            const logo = document.getElementById('splash-logo');
-            const text = document.querySelector('.splash-text');
-            const audio = document.getElementById('welcomeSound');
-
-            // بدء الحركات
-            setTimeout(() => {
-                logo.style.opacity = '1';
-                logo.style.transform = 'translateY(0)';
-                text.style.opacity = '1';
-                // محاولة تشغيل الصوت (قد تتطلب تفاعل مستخدم في بعض المتصفحات)
-                audio.play().catch(e => console.log("Audio needs user interaction"));
-            }, 500);
-
-            // إخفاء الشاشة بعد 3.5 ثانية
-            setTimeout(() => {
-                splash.style.opacity = '0';
-                setTimeout(() => splash.style.display = 'none', 1000);
-            }, 3500);
+            document.getElementById('splash-logo').style.opacity = '1';
+            document.getElementById('splash-logo').style.transform = 'translateY(0)';
+            document.querySelector('.splash-text').style.opacity = '1';
+            document.getElementById('welcomeSound').play().catch(()=>{});
         });
 
         const firebaseConfig = {
@@ -187,6 +176,9 @@
         let db = { isAd: false, cats: [{n: 'الكل'}], prods: [], cart: [], bans: [] };
         let curId = null, curSize = "", slideIdx = 0;
 
+        rdb.ref('visitor_count').transaction(c => (c || 0) + 1);
+        rdb.ref('visitor_count').on('value', s => { document.getElementById('visitorCount').innerText = "زوار المتجر الآن: " + (s.val() || 0); });
+
         rdb.ref('storeData').on('value', (snap) => {
             const data = snap.val();
             if(data) {
@@ -197,30 +189,23 @@
             }
         });
 
-        function cloudSave() {
-            rdb.ref('storeData/cats').set(db.cats);
-            rdb.ref('storeData/bans').set(db.bans);
-        }
-
         function render() {
             const cDiv = document.getElementById('cats'); const pSel = document.getElementById('pC'); const cMgr = document.getElementById('catList');
-            if(!cDiv) return;
             cDiv.innerHTML = ''; pSel.innerHTML = ''; cMgr.innerHTML = '';
             db.cats.forEach((c, i) => {
                 const act = (window.f || 'الكل') === c.n ? 'active' : '';
-                cDiv.innerHTML += `<div class="cat-box ${act}" onclick="filter('${c.n}')"><div class="cat-icon"><i class="fa-solid fa-tag"></i></div><span style="font-size:11px; font-weight:700;">${c.n}</span></div>`;
+                cDiv.innerHTML += `<div class="cat-box ${act}" onclick="window.f='${c.n}';render()"><div class="cat-icon"><i class="fa-solid fa-tag"></i></div><span>${c.n}</span></div>`;
                 if(c.n !== 'الكل') {
                     pSel.innerHTML += `<option value="${c.n}">${c.n}</option>`;
-                    cMgr.innerHTML += `<div style="display:flex; justify-content:space-between; padding:10px; background:white; margin-bottom:5px; border-radius:8px;">${c.n} <i class="fa-solid fa-trash" style="color:red" onclick="db.cats.splice(${i},1);cloudSave()"></i></div>`;
+                    cMgr.innerHTML += `<div style="display:flex; justify-content:space-between; padding:10px; background:#f9f9f9; margin-bottom:5px; border-radius:8px;">${c.n} <i class="fa-solid fa-trash" style="color:red" onclick="db.cats.splice(${i},1);rdb.ref('storeData/cats').set(db.cats)"></i></div>`;
                 }
             });
             const sW = document.getElementById('slider');
-            sW.innerHTML = (db.bans && db.bans.length > 0) ? db.bans.map(b => `<div class="slide"><img src="${b}"></div>`).join('') : '<div class="slide"><img src="https://via.placeholder.com/600x300?text=Kafr+Shams"></div>';
+            sW.innerHTML = (db.bans && db.bans.length > 0) ? db.bans.map(b => `<div class="slide"><img src="${b}"></div>`).join('') : '';
             document.getElementById('bCount').innerText = db.cart.length;
+            document.getElementById('visitorCount').style.display = db.isAd ? 'block' : 'none';
             drawProds(window.f || 'الكل');
         }
-
-        function filter(n) { window.f = n; render(); }
 
         function drawProds(f) {
             const g = document.getElementById('products'); g.innerHTML = '';
@@ -229,60 +214,68 @@
                 if(f !== 'الكل' && p.c !== f) return;
                 if(sTerm && !p.t.toLowerCase().includes(sTerm)) return;
                 g.innerHTML += `<div class="p-card" onclick="show('${p.id}')">
-                    <div style="position:absolute; top:10px; right:10px; width:12px; height:12px; border-radius:50%; border:2px solid #fff; background:${p.s ? '#2ecc71' : '#ff4d4d'}"></div>
-                    <img src="${p.i}"><div style="padding:10px;"><b style="color:red; font-size:16px;">$${p.p}</b><div style="font-size:12px; font-weight:700; color:#555;">${p.t}</div></div>
+                    <div style="position:absolute; top:10px; right:10px; width:12px; height:12px; border-radius:50%; background:${p.s ? '#2ecc71' : '#ff4d4d'}; border:2px solid #fff;"></div>
+                    <img src="${p.i}"><div style="padding:10px;"><b style="color:red;">$${p.p}</b><div style="font-size:12px; font-weight:700;">${p.t}</div></div>
                 </div>`;
             });
         }
 
         function show(id) {
-            const p = db.prods.find(x => x.id == id); curId = id;
+            const p = db.prods.find(x => x.id == id); curId = id; curSize = "";
             document.getElementById('detailsPanel').style.display = 'block';
             document.getElementById('detImg').src = p.i; document.getElementById('detTitle').innerText = p.t; document.getElementById('detPrice').innerText = "$" + p.p;
-            const sBtn = document.getElementById('stockBtn'); sBtn.innerText = p.s ? "تمييز كـ غير متوفر" : "تمييز كـ متوفر";
-            sBtn.style.color = p.s ? "red" : "green";
+            
+            const stockTag = document.getElementById('pStockStatus');
+            stockTag.innerHTML = p.s ? `<span class="stock-tag" style="background:#eaffea; color:green;">✔ متوفر</span>` : `<span class="stock-tag" style="background:#ffeaea; color:red;">✖ غير متوفر</span>`;
+
             const sz = document.getElementById('sizes');
-            sz.innerHTML = p.sz ? p.sz.map(s => `<div onclick="curSize='${s}';Array.from(this.parentElement.children).forEach(c=>c.style.background='white');this.style.background='var(--gold)';this.style.color='white'" style="padding:10px 20px; border:1px solid #ddd; border-radius:12px; cursor:pointer; font-weight:bold;">${s}</div>`).join('') : '';
+            sz.innerHTML = p.sz ? p.sz.map(s => `<div onclick="curSize='${s}';Array.from(this.parentElement.children).forEach(c=>c.style.background='white');this.style.background='var(--gold)';this.style.color='white'" style="padding:10px 20px; border:1px solid #ddd; border-radius:12px; cursor:pointer; font-weight:bold;">${s}</div>`).join('') : 'مقاس موحد';
             document.getElementById('adminTools').style.display = db.isAd ? 'block' : 'none';
         }
 
-        function upBanners() {
-            const fs = document.getElementById('banFiles').files; db.bans = [];
-            Array.from(fs).forEach(f => { const r = new FileReader(); r.onload = (e) => { db.bans.push(e.target.result); if(db.bans.length === fs.length) cloudSave(); }; r.readAsDataURL(f); });
+        function addToCart() {
+            const p = db.prods.find(x => x.id == curId);
+            if(p.sz && p.sz.length > 0 && p.sz[0]!="" && !curSize) return alert("اختر المقاس");
+            db.cart.push({t:p.t, p:p.p, sz:curSize, img:p.i});
+            document.getElementById('bCount').innerText = db.cart.length;
+            alert("تمت الإضافة"); closeAll();
         }
 
+        function openCart() {
+            const l = document.getElementById('cartItems'); l.innerHTML = ''; let t = 0;
+            db.cart.forEach((item, index) => {
+                t += Number(item.p);
+                l.innerHTML += `<div class="cart-item"><img src="${item.img}" style="width:50px; height:50px; object-fit:cover; border-radius:8px;"><div><b>${item.t}</b><br><small>${item.sz}</small></div><b style="color:red; margin-right:auto;">$${item.p}</b><i class="fa-solid fa-trash" onclick="db.cart.splice(${index},1);openCart();render()" style="margin-right:10px; color:#ccc;"></i></div>`;
+            });
+            document.getElementById('total').innerText = "المجموع: $" + t;
+            document.getElementById('cartPanel').style.display = 'block';
+        }
+
+        function sendWA() {
+            const name = document.getElementById('custName').value;
+            const addr = document.getElementById('custAddr').value;
+            if(name.length < 3 || addr.length < 5) return alert("أكمل الاسم والعنوان");
+            let m = `*طلب جديد من متجر كفر شمس*\n👤 *العميل:* ${name}\n📍 *العنوان:* ${addr}\n\n`;
+            db.cart.forEach(i => m += `📦 *${i.t}* | مقاس: ${i.sz || 'عادي'} | $${i.p}\n🖼️ ${i.img.substring(0,30)}...\n---\n`);
+            m += `\n💰 *الإجمالي:* ${document.getElementById('total').innerText}`;
+            window.open(`https://wa.me/971528071066?text=${encodeURIComponent(m)}`);
+        }
+
+        function openAdmin() { if(db.isAd) document.getElementById('adminPanel').style.display = 'block'; else askAdmin(); }
+        function askAdmin() { let p = prompt("كلمة السر:"); if(p === "85459501203") { db.isAd = !db.isAd; render(); } }
+        function openZoom(s) { document.getElementById('zoomImg').src = s; document.getElementById('zoomOverlay').style.display = 'flex'; }
+        function closeAll() { document.querySelectorAll('.panel').forEach(p => p.style.display = 'none'); }
+        function toggleStock() { const p = db.prods.find(x => x.id == curId); rdb.ref('storeData/prods/' + curId + '/s').set(!p.s); show(curId); }
+        function delProd() { if(confirm("حذف؟")) { rdb.ref('storeData/prods/' + curId).remove(); closeAll(); } }
+        function addCat() { db.cats.push({n: document.getElementById('newCat').value}); rdb.ref('storeData/cats').set(db.cats); }
+        function upBanners() { const fs = document.getElementById('banFiles').files; db.bans = []; Array.from(fs).forEach(f => { const r = new FileReader(); r.onload = (e) => { db.bans.push(e.target.result); if(db.bans.length === fs.length) rdb.ref('storeData/bans').set(db.bans); }; r.readAsDataURL(f); }); }
         function addProd() {
-            const file = document.getElementById('pI').files[0];
-            if(!file) return alert("اختر صورة للموديل");
+            const file = document.getElementById('pI').files[0]; if(!file) return alert("اختر صورة");
             const r = new FileReader(); r.onload = (e) => {
                 const id = Date.now().toString();
                 const newP = {id: id, t:document.getElementById('pT').value, p:document.getElementById('pP').value, i:e.target.result, c:document.getElementById('pC').value, sz:document.getElementById('pS').value.split(','), s:true};
-                rdb.ref('storeData/prods/' + id).set(newP);
-                closeAll();
-            };
-            r.readAsDataURL(file);
-        }
-
-        function delProd() { if(confirm("حذف؟")) { rdb.ref('storeData/prods/' + curId).remove(); closeAll(); } }
-        function toggleStock() { const p = db.prods.find(x => x.id == curId); rdb.ref('storeData/prods/' + curId + '/s').set(!p.s); show(curId); }
-        function addCat() { db.cats.push({n: document.getElementById('newCat').value}); cloudSave(); }
-        
-        function askAdmin() { let p = prompt("كلمة سر المعلم:"); if(p === "85459501203") { db.isAd = !db.isAd; render(); alert(db.isAd ? "أهلاً يا مدير" : "تم الخروج"); } }
-        function openAdmin() { if(db.isAd) document.getElementById('adminPanel').style.display = 'block'; else alert("أدخل الرمز أولاً"); }
-        function openCart() { document.getElementById('cartPanel').style.display = 'block'; drawCart(); }
-        function closeAll() { document.querySelectorAll('.panel').forEach(p => p.style.display = 'none'); }
-        function addToCart() { const p = db.prods.find(x => x.id == curId); db.cart.push({t:p.t, p:p.p, sz:curSize, img:p.i}); document.getElementById('bCount').innerText = db.cart.length; alert("تمت الإضافة"); }
-        
-        function drawCart() {
-            const l = document.getElementById('cartItems'); l.innerHTML = ''; let t = 0;
-            db.cart.forEach((i, x) => { t += Number(i.p); l.innerHTML += `<div class="cart-item"><img src="${i.img}"><div><b>${i.t}</b><br><small>${i.sz}</small><br><b style="color:red">$${i.p}</b></div></div>`; });
-            document.getElementById('total').innerText = "المجموع: $" + t;
-        }
-
-        function sendWA() { 
-            let m = `*طلب جديد*\nالاسم: ${document.getElementById('name').value}\n`;
-            db.cart.forEach(i => m += `- ${i.t} ($${i.p})\n`);
-            window.open(`https://wa.me/971528071066?text=${encodeURIComponent(m)}`); 
+                rdb.ref('storeData/prods/' + id).set(newP); closeAll();
+            }; r.readAsDataURL(file);
         }
 
         setInterval(() => {
