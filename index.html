@@ -13,7 +13,7 @@
                 setTimeout(() => { s.style.display = 'none'; }, 1000);
             }
         }
-        setTimeout(killSplash, 3000); // 3 ثوانٍ كحد أقصى وتختفي الشاشة
+        setTimeout(killSplash, 3000); 
     </script>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
@@ -128,14 +128,17 @@
             <p><b>3. إضافة منتج:</b></p>
             <input type="text" id="pT" placeholder="اسم الموديل" style="width:100%; padding:10px; margin:5px 0;">
             <input type="number" id="pP" placeholder="السعر" style="width:100%; padding:10px; margin:5px 0;">
+            
+            <input type="text" id="pIU" placeholder="رابط صورة (اختياري)" style="width:100%; padding:10px; margin:5px 0; border:1px dashed var(--gold);">
+            <p style="font-size:10px; color:#888; margin-right:5px;">أو اختر ملف:</p>
+            
             <input type="file" id="pI" accept="image/*" style="margin:5px 0;">
             <select id="pC" style="width:100%; padding:10px; margin:5px 0;"></select>
             <input type="text" id="pS" placeholder="المقاسات (S,M,L)" style="width:100%; padding:10px; margin:5px 0;">
             <button class="btn btn-black" onclick="addProd()">نشر الآن للسحابة</button>
         </div>
     </div>
-
-    <div id="cartPanel" class="panel">
+        <div id="cartPanel" class="panel">
         <i class="fa-solid fa-chevron-right" onclick="closeAll()"></i>
         <h2 style="margin:20px 0; font-weight:900;">سلتك</h2>
         <div id="cartItems"></div>
@@ -154,7 +157,6 @@
     </nav>
 
     <script>
-        // تفعيل الأنيميشن لشاشة البداية
         window.addEventListener('load', () => {
             document.getElementById('splash-logo').style.opacity = '1';
             document.getElementById('splash-logo').style.transform = 'translateY(0)';
@@ -224,10 +226,8 @@
             const p = db.prods.find(x => x.id == id); curId = id; curSize = "";
             document.getElementById('detailsPanel').style.display = 'block';
             document.getElementById('detImg').src = p.i; document.getElementById('detTitle').innerText = p.t; document.getElementById('detPrice').innerText = "$" + p.p;
-            
             const stockTag = document.getElementById('pStockStatus');
             stockTag.innerHTML = p.s ? `<span class="stock-tag" style="background:#eaffea; color:green;">✔ متوفر</span>` : `<span class="stock-tag" style="background:#ffeaea; color:red;">✖ غير متوفر</span>`;
-
             const sz = document.getElementById('sizes');
             sz.innerHTML = p.sz ? p.sz.map(s => `<div onclick="curSize='${s}';Array.from(this.parentElement.children).forEach(c=>c.style.background='white');this.style.background='var(--gold)';this.style.color='white'" style="padding:10px 20px; border:1px solid #ddd; border-radius:12px; cursor:pointer; font-weight:bold;">${s}</div>`).join('') : 'مقاس موحد';
             document.getElementById('adminTools').style.display = db.isAd ? 'block' : 'none';
@@ -269,13 +269,35 @@
         function delProd() { if(confirm("حذف؟")) { rdb.ref('storeData/prods/' + curId).remove(); closeAll(); } }
         function addCat() { db.cats.push({n: document.getElementById('newCat').value}); rdb.ref('storeData/cats').set(db.cats); }
         function upBanners() { const fs = document.getElementById('banFiles').files; db.bans = []; Array.from(fs).forEach(f => { const r = new FileReader(); r.onload = (e) => { db.bans.push(e.target.result); if(db.bans.length === fs.length) rdb.ref('storeData/bans').set(db.bans); }; r.readAsDataURL(f); }); }
+
         function addProd() {
-            const file = document.getElementById('pI').files[0]; if(!file) return alert("اختر صورة");
-            const r = new FileReader(); r.onload = (e) => {
+            const t = document.getElementById('pT').value;
+            const p = document.getElementById('pP').value;
+            const link = document.getElementById('pIU').value;
+            const file = document.getElementById('pI').files[0];
+            const c = document.getElementById('pC').value;
+            const sz = document.getElementById('pS').value.split(',');
+
+            if(!t || !p) return alert("أكمل البيانات الأساسية");
+
+            const save = (imgData) => {
                 const id = Date.now().toString();
-                const newP = {id: id, t:document.getElementById('pT').value, p:document.getElementById('pP').value, i:e.target.result, c:document.getElementById('pC').value, sz:document.getElementById('pS').value.split(','), s:true};
-                rdb.ref('storeData/prods/' + id).set(newP); closeAll();
-            }; r.readAsDataURL(file);
+                const newP = {id: id, t:t, p:p, i:imgData, c:c, sz:sz, s:true};
+                rdb.ref('storeData/prods/' + id).set(newP);
+                alert("تم النشر بنجاح"); closeAll();
+                document.getElementById('pT').value=""; document.getElementById('pP').value=""; 
+                document.getElementById('pIU').value=""; document.getElementById('pI').value="";
+            };
+
+            if(link && link.trim() !== "") {
+                save(link);
+            } else if(file) {
+                const r = new FileReader();
+                r.onload = (e) => save(e.target.result);
+                r.readAsDataURL(file);
+            } else {
+                alert("يرجى وضع رابط أو اختيار ملف");
+            }
         }
 
         setInterval(() => {
