@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kafr Shams | Cloud Master</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --gold: #D4AF37; --black: #0a0a0a; --white: #ffffff; --gray: #f8f9fa; --danger: #ff4d4d; --success: #2ecc71; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--white); color: var(--black); padding-bottom: 90px; overflow-x: hidden; }
+        
+        /* تصميم شاشة البداية الاحترافية */
+        #splash {
+            position: fixed;
+            inset: 0;
+            background: #000000;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            transition: opacity 1s ease-in-out;
+        }
+        #splash-logo {
+            width: 220px;
+            height: auto;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 1.5s ease-out;
+        }
+        .splash-text {
+            color: var(--gold);
+            margin-top: 20px;
+            font-weight: 900;
+            font-size: 20px;
+            letter-spacing: 3px;
+            opacity: 0;
+            transition: opacity 1s ease-in 0.8s;
+        }
+
+        header { position: sticky; top: 0; background: #fff; z-index: 1000; padding: 15px; border-bottom: 1px solid #f0f0f0; }
+        .header-container { display: flex; flex-direction: column; align-items: center; gap: 10px; position: relative; }
+        .logo-text { font-weight: 900; font-size: 26px; background: linear-gradient(to right, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 2px; }
+        .admin-trigger { position: absolute; left: 0; top: 0; color: var(--black); font-size: 20px; cursor: pointer; background: #eee; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 2px solid var(--gold); box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .slider-container { width: 95%; height: 180px; margin: 10px auto; border-radius: 20px; overflow: hidden; position: relative; background: #eee; }
+        .slider-wrapper { display: flex; transition: transform 0.6s ease-in-out; height: 100%; }
+        .slide { min-width: 100%; height: 100%; }
+        .slide img { width: 100%; height: 100%; object-fit: cover; }
+        .cats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); gap: 12px; padding: 15px; overflow-x: auto; }
+        .cat-box { text-align: center; cursor: pointer; min-width: 80px; }
+        .cat-icon { width: 60px; height: 60px; background: var(--gray); border-radius: 20px; margin: 0 auto 5px; display: flex; align-items: center; justify-content: center; border: 1px solid #eee; transition: 0.3s; }
+        .cat-box.active .cat-icon { background: var(--black); color: white; border-color: var(--gold); transform: scale(1.1); }
+        .products-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 10px; }
+        .p-card { background: #fff; border-radius: 18px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border: 1px solid #f0f0f0; position: relative; transition: 0.2s; }
+        .p-card img { width: 100%; height: 210px; object-fit: cover; }
+        .panel { display: none; position: fixed; inset: 0; background: #fff; z-index: 2000; padding: 20px; overflow-y: auto; }
+        .btn { width: 100%; padding: 15px; border-radius: 12px; border: none; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
+        .btn-black { background: var(--black); color: white; }
+        .cart-item { display: flex; align-items: center; gap: 15px; background: #f9f9f9; padding: 12px; border-radius: 15px; margin-bottom: 10px; border: 1px solid #eee; }
+        .cart-item img { width: 65px; height: 65px; border-radius: 12px; object-fit: cover; }
+        .nav-bar { position: fixed; bottom: 0; width: 100%; background: #fff; display: flex; justify-content: space-around; padding: 15px; border-top: 1px solid #eee; z-index: 1000; }
+        .nav-item { color: #ccc; font-size: 24px; cursor: pointer; position: relative; }
+        .nav-item.active { color: var(--black); }
+        .badge { position: absolute; top: -8px; right: -12px; background: red; color: white; font-size: 10px; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; }
+    </style>
+</head>
+<body>
+
+    <div id="splash">
+        <img src="logo.png" id="splash-logo" alt="Logo">
+        <div class="splash-text">KAFR SHAMS STORE</div>
+        <audio id="welcomeSound" src="welcome.mp3"></audio>
+    </div>
+
+    <header>
+        <div class="header-container">
+            <div class="admin-trigger" onclick="askAdmin()"><i class="fa-solid fa-lock"></i></div>
+            <div class="logo-text">KAFR SHAMS</div>
+            <div style="width:100%; background:var(--gray); padding:10px; border-radius:10px; display:flex; align-items:center;">
+                <i class="fa-solid fa-search" style="color:#aaa; margin-left:10px;"></i>
+                <input type="text" id="searchInp" oninput="drawProds(window.f || 'الكل')" placeholder="ماذا تبحث اليوم؟" style="border:none; background:none; outline:none; width:100%; font-weight:bold;">
+            </div>
+        </div>
+    </header>
+
+    <div class="slider-container"><div class="slider-wrapper" id="slider"></div></div>
+    <div style="overflow-x: auto;"><div class="cats-grid" id="cats"></div></div>
+    <div class="products-grid" id="products"></div>
+
+    <div id="detailsPanel" class="panel">
+        <i class="fa-solid fa-arrow-right" style="font-size:24px;" onclick="closeAll()"></i>
+        <img id="detImg" style="width:100%; border-radius:20px; margin:20px 0;">
+        <h2 id="detTitle" style="font-weight:900;"></h2>
+        <div id="detPrice" style="color:var(--danger); font-size:28px; font-weight:900; margin:10px 0;"></div>
+        <div style="margin-bottom:10px;"><b>المقاسات:</b></div>
+        <div id="sizes" style="display:flex; gap:10px; margin-bottom:20px; overflow-x: auto;"></div>
+        <button class="btn btn-black" onclick="addToCart()">🛒 إضافة للسلة</button>
+        <div id="adminTools" style="display:none; margin-top:25px; border:2px dashed var(--gold); padding:15px; border-radius:15px;">
+            <button class="btn" id="stockBtn" onclick="toggleStock()" style="margin-bottom:10px; border:1px solid #ddd;"></button>
+            <button class="btn" style="color:white; background:red;" onclick="delProd()">❌ حذف الموديل نهائياً</button>
+        </div>
+    </div>
+
+    <div id="adminPanel" class="panel">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h2 style="font-weight:900;">لوحة المدير</h2>
+            <i class="fa-solid fa-times-circle" style="font-size:30px;" onclick="closeAll()"></i>
+        </div>
+        <div style="background:var(--gray); padding:15px; border-radius:15px; margin-bottom:15px;">
+            <p><b>1. البانر:</b> <input type="file" id="banFiles" multiple accept="image/*"></p>
+            <button class="btn btn-black" onclick="upBanners()">حفظ البانر</button>
+        </div>
+        <div style="background:var(--gray); padding:15px; border-radius:15px; margin-bottom:15px;">
+            <p><b>2. الأقسام:</b> <input type="text" id="newCat" placeholder="اسم القسم" style="width:100%; padding:10px; margin:10px 0;"></p>
+            <button class="btn btn-black" onclick="addCat()">+ إضافة</button>
+            <div id="catList" style="margin-top:10px;"></div>
+        </div>
+        <div style="background:var(--gray); padding:15px; border-radius:15px;">
+            <p><b>3. إضافة منتج:</b></p>
+            <input type="text" id="pT" placeholder="اسم الموديل" style="width:100%; padding:10px; margin:5px 0;">
+            <input type="number" id="pP" placeholder="السعر" style="width:100%; padding:10px; margin:5px 0;">
+            <input type="file" id="pI" accept="image/*" style="margin:5px 0;">
+            <select id="pC" style="width:100%; padding:10px; margin:5px 0;"></select>
+            <input type="text" id="pS" placeholder="المقاسات (S,M,L)" style="width:100%; padding:10px; margin:5px 0;">
+            <button class="btn btn-black" onclick="addProd()">نشر الآن للسحابة</button>
+        </div>
+    </div>
+
+    <div id="cartPanel" class="panel">
+        <i class="fa-solid fa-chevron-right" onclick="closeAll()"></i>
+        <h2 style="margin:20px 0; font-weight:900;">سلتك</h2>
+        <div id="cartItems"></div>
+        <div style="margin-top:20px; border-top:2px solid #eee; padding-top:20px;">
+            <h3 id="total" style="color:red; margin-bottom:15px;"></h3>
+            <input type="text" id="name" placeholder="اسمك" style="width:100%; padding:12px; margin:5px 0;">
+            <input type="text" id="addr" placeholder="العنوان" style="width:100%; padding:12px; margin:5px 0;">
+            <button class="btn" style="background:#25d366; color:white;" onclick="sendWA()">✅ طلب عبر واتساب</button>
+        </div>
+    </div>
+
+    <nav class="nav-bar">
+        <div class="nav-item active" onclick="location.reload()"><i class="fa-solid fa-home"></i></div>
+        <div class="nav-item" onclick="openAdmin()"><i class="fa-solid fa-sliders"></i></div>
+        <div class="nav-item" onclick="openCart()"><i class="fa-solid fa-shopping-bag"></i><span class="badge" id="bCount">0</span></div>
+    </nav>
+
+    <script>
+        // محرك شاشة البداية والصوت
+        window.addEventListener('load', () => {
+            const splash = document.getElementById('splash');
+            const logo = document.getElementById('splash-logo');
+            const text = document.querySelector('.splash-text');
+            const audio = document.getElementById('welcomeSound');
+
+            // بدء الحركات
+            setTimeout(() => {
+                logo.style.opacity = '1';
+                logo.style.transform = 'translateY(0)';
+                text.style.opacity = '1';
+                // محاولة تشغيل الصوت (قد تتطلب تفاعل مستخدم في بعض المتصفحات)
+                audio.play().catch(e => console.log("Audio needs user interaction"));
+            }, 500);
+
+            // إخفاء الشاشة بعد 3.5 ثانية
+            setTimeout(() => {
+                splash.style.opacity = '0';
+                setTimeout(() => splash.style.display = 'none', 1000);
+            }, 3500);
+        });
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBv2CO2ySKF3mxcAlgOzJv0m1tZjWmxkOA",
+            authDomain: "kafr-shams-store.firebaseapp.com",
+            databaseURL: "https://kafr-shams-store-default-rtdb.firebaseio.com",
+            projectId: "kafr-shams-store",
+            storageBucket: "kafr-shams-store.appspot.com",
+            appId: "1:456804691966:web:ad36d2a93988c7e4dfdaaf"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const rdb = firebase.database();
+
+        let db = { isAd: false, cats: [{n: 'الكل'}], prods: [], cart: [], bans: [] };
+        let curId = null, curSize = "", slideIdx = 0;
+
+        rdb.ref('storeData').on('value', (snap) => {
+            const data = snap.val();
+            if(data) {
+                db.cats = data.cats || [{n: 'الكل'}];
+                db.prods = data.prods ? Object.values(data.prods) : [];
+                db.bans = data.bans || [];
+                render();
+            }
+        });
+
+        function cloudSave() {
+            rdb.ref('storeData/cats').set(db.cats);
+            rdb.ref('storeData/bans').set(db.bans);
+        }
+
+        function render() {
+            const cDiv = document.getElementById('cats'); const pSel = document.getElementById('pC'); const cMgr = document.getElementById('catList');
+            if(!cDiv) return;
+            cDiv.innerHTML = ''; pSel.innerHTML = ''; cMgr.innerHTML = '';
+            db.cats.forEach((c, i) => {
+                const act = (window.f || 'الكل') === c.n ? 'active' : '';
+                cDiv.innerHTML += `<div class="cat-box ${act}" onclick="filter('${c.n}')"><div class="cat-icon"><i class="fa-solid fa-tag"></i></div><span style="font-size:11px; font-weight:700;">${c.n}</span></div>`;
+                if(c.n !== 'الكل') {
+                    pSel.innerHTML += `<option value="${c.n}">${c.n}</option>`;
+                    cMgr.innerHTML += `<div style="display:flex; justify-content:space-between; padding:10px; background:white; margin-bottom:5px; border-radius:8px;">${c.n} <i class="fa-solid fa-trash" style="color:red" onclick="db.cats.splice(${i},1);cloudSave()"></i></div>`;
+                }
+            });
+            const sW = document.getElementById('slider');
+            sW.innerHTML = (db.bans && db.bans.length > 0) ? db.bans.map(b => `<div class="slide"><img src="${b}"></div>`).join('') : '<div class="slide"><img src="https://via.placeholder.com/600x300?text=Kafr+Shams"></div>';
+            document.getElementById('bCount').innerText = db.cart.length;
+            drawProds(window.f || 'الكل');
+        }
+
+        function filter(n) { window.f = n; render(); }
+
+        function drawProds(f) {
+            const g = document.getElementById('products'); g.innerHTML = '';
+            const sTerm = document.getElementById('searchInp').value.toLowerCase();
+            db.prods.forEach(p => {
+                if(f !== 'الكل' && p.c !== f) return;
+                if(sTerm && !p.t.toLowerCase().includes(sTerm)) return;
+                g.innerHTML += `<div class="p-card" onclick="show('${p.id}')">
+                    <div style="position:absolute; top:10px; right:10px; width:12px; height:12px; border-radius:50%; border:2px solid #fff; background:${p.s ? '#2ecc71' : '#ff4d4d'}"></div>
+                    <img src="${p.i}"><div style="padding:10px;"><b style="color:red; font-size:16px;">$${p.p}</b><div style="font-size:12px; font-weight:700; color:#555;">${p.t}</div></div>
+                </div>`;
+            });
+        }
+
+        function show(id) {
+            const p = db.prods.find(x => x.id == id); curId = id;
+            document.getElementById('detailsPanel').style.display = 'block';
+            document.getElementById('detImg').src = p.i; document.getElementById('detTitle').innerText = p.t; document.getElementById('detPrice').innerText = "$" + p.p;
+            const sBtn = document.getElementById('stockBtn'); sBtn.innerText = p.s ? "تمييز كـ غير متوفر" : "تمييز كـ متوفر";
+            sBtn.style.color = p.s ? "red" : "green";
+            const sz = document.getElementById('sizes');
+            sz.innerHTML = p.sz ? p.sz.map(s => `<div onclick="curSize='${s}';Array.from(this.parentElement.children).forEach(c=>c.style.background='white');this.style.background='var(--gold)';this.style.color='white'" style="padding:10px 20px; border:1px solid #ddd; border-radius:12px; cursor:pointer; font-weight:bold;">${s}</div>`).join('') : '';
+            document.getElementById('adminTools').style.display = db.isAd ? 'block' : 'none';
+        }
+
+        function upBanners() {
+            const fs = document.getElementById('banFiles').files; db.bans = [];
+            Array.from(fs).forEach(f => { const r = new FileReader(); r.onload = (e) => { db.bans.push(e.target.result); if(db.bans.length === fs.length) cloudSave(); }; r.readAsDataURL(f); });
+        }
+
+        function addProd() {
+            const file = document.getElementById('pI').files[0];
+            if(!file) return alert("اختر صورة للموديل");
+            const r = new FileReader(); r.onload = (e) => {
+                const id = Date.now().toString();
+                const newP = {id: id, t:document.getElementById('pT').value, p:document.getElementById('pP').value, i:e.target.result, c:document.getElementById('pC').value, sz:document.getElementById('pS').value.split(','), s:true};
+                rdb.ref('storeData/prods/' + id).set(newP);
+                closeAll();
+            };
+            r.readAsDataURL(file);
+        }
+
+        function delProd() { if(confirm("حذف؟")) { rdb.ref('storeData/prods/' + curId).remove(); closeAll(); } }
+        function toggleStock() { const p = db.prods.find(x => x.id == curId); rdb.ref('storeData/prods/' + curId + '/s').set(!p.s); show(curId); }
+        function addCat() { db.cats.push({n: document.getElementById('newCat').value}); cloudSave(); }
+        
+        function askAdmin() { let p = prompt("كلمة سر المعلم:"); if(p === "8545955") { db.isAd = !db.isAd; render(); alert(db.isAd ? "أهلاً يا مدير" : "تم الخروج"); } }
+        function openAdmin() { if(db.isAd) document.getElementById('adminPanel').style.display = 'block'; else alert("أدخل الرمز أولاً"); }
+        function openCart() { document.getElementById('cartPanel').style.display = 'block'; drawCart(); }
+        function closeAll() { document.querySelectorAll('.panel').forEach(p => p.style.display = 'none'); }
+        function addToCart() { const p = db.prods.find(x => x.id == curId); db.cart.push({t:p.t, p:p.p, sz:curSize, img:p.i}); document.getElementById('bCount').innerText = db.cart.length; alert("تمت الإضافة"); }
+        
+        function drawCart() {
+            const l = document.getElementById('cartItems'); l.innerHTML = ''; let t = 0;
+            db.cart.forEach((i, x) => { t += Number(i.p); l.innerHTML += `<div class="cart-item"><img src="${i.img}"><div><b>${i.t}</b><br><small>${i.sz}</small><br><b style="color:red">$${i.p}</b></div></div>`; });
+            document.getElementById('total').innerText = "المجموع: $" + t;
+        }
+
+        function sendWA() { 
+            let m = `*طلب جديد*\nالاسم: ${document.getElementById('name').value}\n`;
+            db.cart.forEach(i => m += `- ${i.t} ($${i.p})\n`);
+            window.open(`https://wa.me/963900000000?text=${encodeURIComponent(m)}`); 
+        }
+
+        setInterval(() => {
+            const w = document.getElementById('slider'); if(!db.bans || db.bans.length < 2) return;
+            slideIdx = (slideIdx + 1) % db.bans.length; w.style.transform = `translateX(${slideIdx * 100}%)`;
+        }, 3000);
+    </script>
+</body>
+</html>
