@@ -34,7 +34,6 @@
         .header-container { display: flex; flex-direction: column; align-items: center; gap: 12px; position: relative; }
         .logo-text { font-weight: 900; font-size: 28px; background: var(--gold); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.1)); }
         
-        /* تنسيق عداد المتصلين */
         #onlineCounter { display: none; color: var(--success); font-weight: 900; font-size: 13px; margin-top: -8px; background: rgba(46, 204, 113, 0.1); padding: 2px 12px; border-radius: 20px; border: 1px solid rgba(46, 204, 113, 0.2); }
         #onlineCounter i { font-size: 8px; vertical-align: middle; margin-left: 5px; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
@@ -157,7 +156,6 @@
     </nav>
 
     <script>
-        // --- الفتح والإغلاق الذكي لزر الرجوع ---
         function openPanel(id) {
             history.pushState({panel: id}, "");
             const p = document.getElementById(id);
@@ -175,7 +173,6 @@
 
         window.onpopstate = (e) => closeAll(true);
 
-        // --- إعدادات Firebase والبيانات ---
         const firebaseConfig = { apiKey: "AIzaSyBv2CO2ySKF3mxcAlgOzJv0m1tZjWmxkOA", authDomain: "kafr-shams-store.firebaseapp.com", databaseURL: "https://kafr-shams-store-default-rtdb.firebaseio.com", projectId: "kafr-shams-store", storageBucket: "kafr-shams-store.appspot.com", appId: "1:456804691966:web:ad36d2a93988c7e4dfdaaf" };
         firebase.initializeApp(firebaseConfig);
         const rdb = firebase.database();
@@ -183,7 +180,6 @@
         let db = { isAd: false, cats: [{n: 'الكل'}], prods: [], cart: [], bans: [] };
         let curId = null, curSize = "";
 
-        // --- نظام المتصلين الآن الذكي ---
         const myPresenceRef = rdb.ref('online_users').push();
         rdb.ref('.info/connected').on('value', (snap) => {
             if (snap.val() === true) {
@@ -192,7 +188,6 @@
             }
         });
 
-        // مراقبة عدد المتصلين (تظهر فقط للمدير)
         rdb.ref('online_users').on('value', (snap) => {
             const count = snap.numChildren();
             document.getElementById('activeUsers').innerText = count;
@@ -209,9 +204,7 @@
         });
 
         function render() {
-            // تحديث رؤية العداد (يظهر فقط إذا كان الوضع مدير)
             document.getElementById('onlineCounter').style.display = db.isAd ? 'block' : 'none';
-
             const cDiv = document.getElementById('cats'); const pSel = document.getElementById('pC'); const cMgr = document.getElementById('catList');
             cDiv.innerHTML = ''; pSel.innerHTML = ''; cMgr.innerHTML = '';
             db.cats.forEach((c, i) => {
@@ -278,14 +271,18 @@
             render(); alert("تمت الإضافة لسلة المشتريات"); closeAll();
         }
 
+        // --- التعديل المطلوب هنا في دالة الإرسال ---
         function sendWA() {
             if (db.cart.length === 0) return alert("السلة فارغة!");
             const name = document.getElementById('custName').value, addr = document.getElementById('custAddr').value;
             if(!name || !addr) return alert("يرجى إدخال البيانات");
-            let m = `*طلب جديد*\n👤 الاسم: ${name}\n📍 العنوان: ${addr}\n\n`;
-            db.cart.forEach(i => m += `📦 ${i.t} | مقاس: ${i.sz || 'موحد'} | $${i.p}\n`);
+            let m = `*طلب جديد من متجر كفر شمس*\n\n👤 *الاسم:* ${name}\n📍 *العنوان:* ${addr}\n\n`;
+            m += `--- *تفاصيل المنتجات* ---\n`;
+            db.cart.forEach((i, index) => {
+                m += `${index + 1}- 📦 *${i.t}*\n📏 المقاس: ${i.sz || 'موحد'}\n💰 السعر: $${i.p}\n🔗 رابط الصورة: ${i.img}\n\n`;
+            });
             let totalVal = db.cart.reduce((s, i) => s + Number(i.p), 0);
-            m += `\n💰 الإجمالي: $${totalVal}`;
+            m += `💰 *الإجمالي النهائي: $${totalVal}*`;
             window.open(`https://wa.me/971528071066?text=${encodeURIComponent(m)}`);
         }
 
