@@ -58,8 +58,7 @@
         .cart-item { display: flex; align-items: center; gap: 15px; background: #f9f9f9; padding: 10px; border-radius: 15px; margin-bottom: 10px; }
         .cart-item img { width: 60px; height: 60px; border-radius: 10px; object-fit: cover; }
     </style>
-</head>
-<body>
+</head><body>
     <div id="splash">
         <img src="logo.png" id="splash-logo">
         <div class="splash-text">KAFR SHAMS STORE</div>
@@ -80,8 +79,7 @@
     </header>
 
     <div class="slider-container"><div class="slider-wrapper" id="slider" style="display: flex; transition: 0.7s; height: 100%;"></div></div>
-    
-    <div style="padding: 10px 25px; font-weight: 900; font-size: 19px; color: #222;">الأقسام</div>
+        <div style="padding: 10px 25px; font-weight: 900; font-size: 19px; color: #222;">الأقسام</div>
     <div class="cats-grid" id="cats"></div>
     
     <div style="padding: 5px 25px; font-weight: 900; font-size: 19px; color: #222;">المنتجات</div>
@@ -180,6 +178,13 @@
         let db = { isAd: false, cats: [{n: 'الكل'}], prods: [], cart: [], bans: [] };
         let curId = null, curSize = "";
 
+        // --- نظام بصمة الجهاز الفريدة (إضافة المعلم) ---
+        let myDeviceFingerprint = localStorage.getItem('kafr_shams_admin_uid');
+        if (!myDeviceFingerprint) {
+            myDeviceFingerprint = 'KS-' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
+            localStorage.setItem('kafr_shams_admin_uid', myDeviceFingerprint);
+        }
+
         const myPresenceRef = rdb.ref('online_users').push();
         rdb.ref('.info/connected').on('value', (snap) => {
             if (snap.val() === true) {
@@ -271,22 +276,39 @@
             render(); alert("تمت الإضافة لسلة المشتريات"); closeAll();
         }
 
-        // --- التعديل المطلوب هنا في دالة الإرسال ---
         function sendWA() {
             if (db.cart.length === 0) return alert("السلة فارغة!");
             const name = document.getElementById('custName').value, addr = document.getElementById('custAddr').value;
             if(!name || !addr) return alert("يرجى إدخال البيانات");
-            let m = `*طلب جديد من متجر كفر شمس*\n\n👤 *الاسم:* ${name}\n📍 *العنوان:* ${addr}\n\n`;
-            m += `--- *تفاصيل المنتجات* ---\n`;
-            db.cart.forEach((i, index) => {
-                m += `${index + 1}- 📦 *${i.t}*\n📏 المقاس: ${i.sz || 'موحد'}\n💰 السعر: $${i.p}\n🔗 رابط الصورة: ${i.img}\n\n`;
-            });
+            let m = `*طلب جديد*\n👤 الاسم: ${name}\n📍 العنوان: ${addr}\n\n`;
+            db.cart.forEach(i => m += `📦 ${i.t} | مقاس: ${i.sz || 'موحد'} | $${i.p}\n`);
             let totalVal = db.cart.reduce((s, i) => s + Number(i.p), 0);
-            m += `💰 *الإجمالي النهائي: $${totalVal}*`;
+            m += `\n💰 الإجمالي: $${totalVal}`;
             window.open(`https://wa.me/971528071066?text=${encodeURIComponent(m)}`);
         }
 
-        function askAdmin() { let p = prompt("كلمة السر:"); if(p === "85459501203") { db.isAd = !db.isAd; render(); } }
+        // --- دالة التحقق الذكية الجديدة (إضافة المعلم) ---
+        function askAdmin() {
+            let pInp = prompt("أدخل رمز الإدارة الحصري:");
+            if (!pInp) return;
+
+            const adminRef = rdb.ref('storeData/authorized_managers');
+            adminRef.once('value').then((snap) => {
+                let managers = snap.val() ? Object.values(snap.val()) : [];
+                if (managers.includes(myDeviceFingerprint)) {
+                    if (pInp === "85459501203") { db.isAd = !db.isAd; render(); if(db.isAd) openPanel('adminPanel'); } 
+                    else alert("الرمز غير صحيح");
+                } else if (managers.length < 3) {
+                    if (pInp === "85459501203") {
+                        adminRef.push(myDeviceFingerprint);
+                        db.isAd = true; render(); alert("تم تسجيل جهازك كمدير معتمد"); openPanel('adminPanel');
+                    } else alert("الرمز غير صحيح");
+                } else {
+                    alert("عذراً، هذا الجهاز غير مصرح له بالإدارة.");
+                }
+            });
+        }
+
         function openAdmin() { if(db.isAd) openPanel('adminPanel'); else askAdmin(); }
         function openZoom(s) { document.getElementById('zoomImg').src = s; document.getElementById('zoomOverlay').style.display = 'flex'; }
         function toggleStock() { const p = db.prods.find(x => x.id == curId); rdb.ref('storeData/prods/' + curId + '/s').set(!p.s); show(curId); }
@@ -297,10 +319,7 @@
             const files = document.getElementById('banFiles').files;
             if(files.length === 0) return;
             let urls = [];
-            for(let f of files) {
-                const base64 = await toBase64(f);
-                urls.push(base64);
-            }
+            for(let f of files) { const base64 = await toBase64(f); urls.push(base64); }
             rdb.ref('storeData/bans').set(urls).then(() => alert("تم حفظ البانرات"));
         }
 
